@@ -1,0 +1,5 @@
+.git
+uv.lock
+pyproject.toml
+
+.venv
