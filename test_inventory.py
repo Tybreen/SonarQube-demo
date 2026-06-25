@@ -95,7 +95,7 @@ class TestInventoryItem:
         # 3 * 0.1 = 0.30000000000000004 due to floating point;
         # total_value() should round this cleanly
         item = InventoryItem(sku="SKU1", name="Widget", quantity=3, price=0.1)
-        assert round(item.total_value(), 2) == 0.30
+        assert item.total_value() * 10 == 3
 
     def test_is_low_stock_true_when_at_threshold(self):
         item = InventoryItem(

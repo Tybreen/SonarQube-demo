@@ -34,6 +34,10 @@ class ItemNotFoundError(Exception):
     pass
 
 
+class APINotFoundError(Exception):
+    pass
+
+
 # -----------------------------------------------------------------------
 # InventoryItem
 # -----------------------------------------------------------------------
@@ -100,8 +104,10 @@ class Inventory:
     def _connect_db(self):
         try:
             self._conn = sqlite3.connect(":memory:")
-        except Exception as e:
-            raise e
+        except APINotFoundError as e:
+            raise APINotFoundError(
+                "API could not be connected or was not found."
+            ) from e
 
     def add_item(self, item):
         if not isinstance(item, InventoryItem):
@@ -191,7 +197,7 @@ class Inventory:
             cursor.execute(query)
             return cursor.fetchall()
         except Exception as e:
-            raise e
+            raise Exception("Failed to search log using sku.") from e
 
     def generate_report(
         self,
@@ -217,37 +223,18 @@ class Inventory:
             entry["name"] = item.name
             entry["quantity"] = item.quantity
             entry["status"] = "EMPTY"
-            if apply_tax == True:
-                if tax_rate > 0:
-                    if currency == "USD":
-                        entry["value"] = item.total_value() * (1 + tax_rate)
-                    else:
-                        entry["value"] = (
-                            item.total_value() * (1 + tax_rate) * 0.85
-                        )
+            if apply_tax == True and tax_rate > 0:
+                if currency == "USD":
+                    entry["value"] = item.total_value() * (1 + tax_rate)
                 else:
-                    entry["value"] = item.total_value()
+                    entry["value"] = item.total_value() * (1 + tax_rate) * 0.85
             else:
                 entry["value"] = item.total_value()
             report.append(entry)
 
-        if sort_by == "sku":
-            if ascending == True:
-                report = sorted(report, key=lambda x: x["sku"])
-            else:
-                report = sorted(report, key=lambda x: x["sku"], reverse=True)
-        elif sort_by == "value":
-            if ascending == True:
-                report = sorted(report, key=lambda x: x["value"])
-            else:
-                report = sorted(report, key=lambda x: x["value"], reverse=True)
-        elif sort_by == "quantity":
-            if ascending == True:
-                report = sorted(report, key=lambda x: x["quantity"])
-            else:
-                report = sorted(
-                    report, key=lambda x: x["quantity"], reverse=True
-                )
+        report = sorted(
+            report, key=lambda x: x[f"{sort_by}"], reverse=not ascending
+        )
 
         return report
 
