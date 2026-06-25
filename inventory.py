@@ -38,6 +38,10 @@ class APINotFoundError(Exception):
     pass
 
 
+class SQIError(Exception):
+    pass
+
+
 # -----------------------------------------------------------------------
 # InventoryItem
 # -----------------------------------------------------------------------
@@ -197,7 +201,7 @@ class Inventory:
             cursor.execute(query)
             return cursor.fetchall()
         except Exception as e:
-            raise Exception("Failed to search log using sku.") from e
+            raise SQIError("Failed to search log using sku.") from e
 
     def generate_report(
         self,
